@@ -9,3 +9,4 @@ match_block_trailing_comma = true
 struct_lit_multiline_style = "ForceMulti"
 struct_lit_style = "Block"
 use_try_shorthand = true
+max_width = 1024

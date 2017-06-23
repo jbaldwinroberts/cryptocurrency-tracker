@@ -19,19 +19,25 @@ fn main() {
         .version("0.1.0")
         .author("Joe Roberts <joe@resin.io>")
         .about("Get crypto stock information from coinmarketcap.com")
-        .arg(Arg::with_name("crypto")
-                 .short("c")
-                 .long("crypto")
-                 .help("Enter the crypto")
-                 .takes_value(true)
-                 .default_value("ethereum"))
-        .arg(Arg::with_name("format")
-                 .short("f")
-                 .long("format")
-                 .help("Enter the format")
-                 .long_help("longer")
-                 .takes_value(true)
-                 .default_value("{name}, {symbol}, {rank}, {price_usd}, {price_btc}, {24h_volume_usd}, {market_cap_usd}, {available_supply}, {total_supply}, {percent_change_1h}, {percent_change_24h}, {percent_change_7d}, {last_updated}"))
+        .arg(
+            Arg::with_name("crypto")
+                .short("c")
+                .long("crypto")
+                .help("Enter the crypto")
+                .takes_value(true)
+                .default_value("ethereum"),
+        )
+        .arg(
+            Arg::with_name("format")
+                .short("f")
+                .long("format")
+                .help("Enter the format")
+                .long_help("longer")
+                .takes_value(true)
+                .default_value(
+                    "{name}, {symbol}, {rank}, {price_usd}, {price_btc}, {24h_volume_usd}, {market_cap_usd}, {available_supply}, {total_supply}, {percent_change_1h}, {percent_change_24h}, {percent_change_7d}, {last_updated}",
+                ),
+        )
         .get_matches();
 
     let mut url = PathBuf::from("http://api.coinmarketcap.com/v1/ticker/");
@@ -42,9 +48,8 @@ fn main() {
     let mut contents = String::new();
     response.read_to_string(&mut contents).unwrap();
 
-    let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&mut contents).unwrap();
+    let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&contents).unwrap();
     let stock = stocks.first().unwrap();
 
-    println!("{}",
-             strfmt(matches.value_of("format").unwrap(), &stock).unwrap());
+    println!("{}", strfmt(matches.value_of("format").unwrap(), stock).unwrap());
 }
