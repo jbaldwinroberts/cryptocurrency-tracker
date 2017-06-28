@@ -35,7 +35,10 @@ fn main() {
                 .long_help("longer")
                 .takes_value(true)
                 .default_value(
-                    "{name}, {symbol}, {rank}, {price_usd}, {price_btc}, {24h_volume_usd}, {market_cap_usd}, {available_supply}, {total_supply}, {percent_change_1h}, {percent_change_24h}, {percent_change_7d}, {last_updated}",
+                    "{name}, {symbol}, {rank}, {price_usd}, {price_btc}, \
+                     {24h_volume_usd}, {market_cap_usd}, {available_supply}, \
+                     {total_supply}, {percent_change_1h}, {percent_change_24h}, \
+                     {percent_change_7d}, {last_updated}",
                 ),
         )
         .get_matches();
