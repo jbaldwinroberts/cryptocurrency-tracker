@@ -1,0 +1,22 @@
+[package]
+name = "rust-crypto-tracker"
+version = "0.1.0"
+authors = ["Joe Roberts <j.baldwin.roberts@gmail.com>"]
+license = "Apache-2.0"
+build = "build.rs"
+
+[lib]
+name = "rust_crypto_tracker"
+crate-type = ["dylib"]
+
+[build-dependencies]
+neon-build = "0.1.18"
+
+[dependencies]
+neon = "0.1.18"
+clap = "*"
+hyper = "0.10.*"
+serde = "*"
+serde_json = "*"
+serde_derive = "*"
+strfmt = "*"
