@@ -18,6 +18,6 @@ install:
 script:
   - cargo fmt -- --write-mode=diff
   - if [ $TRAVIS_RUST_VERSION == nightly ]; then
-      cargo clippy -- -D warnings;
+      cargo clippy;
     fi
   - cargo build
