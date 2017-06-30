@@ -14,6 +14,10 @@ use clap::{App, Arg};
 extern crate serde;
 extern crate serde_json;
 
+mod tokenizer;
+
+use tokenizer::{Token, TokenType, tokenise_format_str};
+
 fn main() {
     let matches = App::new("rust-crypto-tracker")
         .version("0.1.0")
@@ -42,6 +46,8 @@ fn main() {
                 ),
         )
         .get_matches();
+
+    tokenise_format_str(matches.value_of("format").unwrap());
 
     let mut url = PathBuf::from("http://api.coinmarketcap.com/v1/ticker/");
     url.push(matches.value_of("crypto").unwrap());
