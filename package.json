@@ -1,0 +1,19 @@
+{
+  "name": "rust-crypto-tracker",
+  "version": "0.1.0",
+  "description": "Small command line tool to track crypto stocks",
+  "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/josephroberts/rust-crypto-tracker"
+  },
+  "author": "Joe Roberts <j.baldwin.roberts@gmail.com>",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "neon-cli": "^0.1.18"
+  },
+  "scripts": {
+    "install": "neon build",
+    "start": "node -e 'require(\"./\")'"
+  }
+}

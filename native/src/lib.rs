@@ -1,3 +1,9 @@
+#[macro_use]
+extern crate neon;
+
+use neon::vm::{Call, JsResult};
+use neon::js::JsString;
+
 use std::collections::HashMap;
 use std::io::Read;
 use std::path::PathBuf;
@@ -14,7 +20,9 @@ use clap::{App, Arg};
 extern crate serde;
 extern crate serde_json;
 
-fn main() {
+fn run(call: Call) -> JsResult<JsString> {
+    let scope = call.scope;
+
     let matches = App::new("rust-crypto-tracker")
         .version("0.1.0")
         .author("Joe Roberts <joe@resin.io>")
@@ -54,5 +62,11 @@ fn main() {
     let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&contents).unwrap();
     let stock = stocks.first().unwrap();
 
-    println!("{}", strfmt(matches.value_of("format").unwrap(), stock).unwrap());
+    Ok(
+        JsString::new(scope, &strfmt(matches.value_of("format").unwrap(), stock).unwrap()).unwrap(),
+    )
 }
+
+register_module!(m, {
+    m.export("run", run)
+});
