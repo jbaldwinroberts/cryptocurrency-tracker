@@ -1,3 +1,11 @@
+#![recursion_limit = "1024"]
+#[macro_use]
+extern crate error_chain;
+mod errors {
+    error_chain!{}
+}
+use errors::*;
+
 use std::collections::HashMap;
 use std::io::Read;
 
@@ -14,6 +22,26 @@ extern crate serde;
 extern crate serde_json;
 
 fn main() {
+    if let Err(ref e) = run() {
+        use std::io::Write;
+        let stderr = &mut ::std::io::stderr();
+        let errmsg = "Error writing to stderr";
+
+        writeln!(stderr, "error: {}", e).expect(errmsg);
+
+        for e in e.iter().skip(1) {
+            writeln!(stderr, "caused by: {}", e).expect(errmsg);
+        }
+
+        if let Some(backtrace) = e.backtrace() {
+            writeln!(stderr, "backtrace: {:?}", backtrace).expect(errmsg);
+        }
+
+        ::std::process::exit(1);
+    }
+}
+
+fn run() -> Result<()> {
     let matches = App::new("rust-crypto-tracker")
         .version("0.1.0")
         .author("Joe Roberts <joe@resin.io>")
@@ -48,21 +76,35 @@ fn main() {
                 .takes_value(true)
                 .default_value(" | "),
         )
-        .get_matches();
+        .get_matches_safe()
+        .chain_err(|| "unable to get matches")?;
 
-    let cryptos: Vec<_> = matches.values_of("crypto").unwrap().collect();
-    let format: &str = matches.value_of("format").unwrap();
-    let separator: &str = matches.value_of("separator").unwrap();
+    let cryptos: Vec<_> = matches
+        .values_of("crypto")
+        .ok_or(Error::from("unable to get cryptos vector"))?
+        .collect();
+    let format: &str = matches.value_of("format").ok_or(Error::from(
+        "unable to get format string",
+    ))?;
+    let separator: &str = matches.value_of("separator").ok_or(Error::from(
+        "unable to get separator string",
+    ))?;
 
     let client = Client::new();
     let mut response = client
         .get("http://api.coinmarketcap.com/v1/ticker/?limit=10")
         .send()
-        .unwrap();
-    let mut contents = String::new();
-    response.read_to_string(&mut contents).unwrap();
+        .chain_err(|| "unable to send GET request")?;
 
-    let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&contents).unwrap();
+    let mut contents = String::new();
+    response.read_to_string(&mut contents).chain_err(
+        || "unable to read API response",
+    )?;
+
+    let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&contents).chain_err(
+        || "unable to parse API response",
+    )?;
+
     let stocks: HashMap<String, HashMap<String, String>> = stocks
         .iter()
         .map(|s| (s["symbol"].clone(), s.clone()))
@@ -70,11 +112,18 @@ fn main() {
 
     let mut iter = cryptos.iter().peekable();
     while let Some(current) = iter.next() {
-        let stock = stocks.get::<str>(current).unwrap();
-        print!("{}", strfmt(format, stock).unwrap());
+        let stock = stocks.get::<str>(current).ok_or(Error::from(format!(
+            "unable to get {} stock",
+            current
+        )))?;
+
+        print!("{}", strfmt(format, stock).chain_err(|| "unable to format stock")?);
+
         match iter.peek() {
             Some(_) => print!("{}", separator),
             None => println!(""),
         }
     }
+
+    Ok(())
 }
