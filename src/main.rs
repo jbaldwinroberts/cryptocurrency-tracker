@@ -42,15 +42,15 @@ fn main() {
 }
 
 fn run() -> Result<()> {
-    let matches = App::new("rust-crypto-tracker")
+    let matches = App::new("cryptocurrency-tracker")
         .version("0.1.0")
         .author("Joe Roberts <joe@resin.io>")
-        .about("Get crypto stock information from coinmarketcap.com")
+        .about("Get cryptocurrency information from coinmarketcap.com")
         .arg(
-            Arg::with_name("crypto")
+            Arg::with_name("cryptocurrency")
                 .short("c")
-                .long("crypto")
-                .help("Enter the crypto(s)")
+                .long("cryptocurrency")
+                .help("Enter the cryptocurrency(s) you are interested in")
                 .takes_value(true)
                 .multiple(true)
                 .required(true),
@@ -79,13 +79,15 @@ fn run() -> Result<()> {
         .get_matches_safe()
         .chain_err(|| "unable to get matches")?;
 
-    let cryptos: Vec<_> = matches
-        .values_of("crypto")
-        .ok_or(Error::from("unable to get cryptos vector"))?
+    let cryptocurrencys: Vec<_> = matches
+        .values_of("cryptocurrency")
+        .ok_or(Error::from("unable to get cryptocurrency vector"))?
         .collect();
+
     let format: &str = matches.value_of("format").ok_or(Error::from(
         "unable to get format string",
     ))?;
+
     let separator: &str = matches.value_of("separator").ok_or(Error::from(
         "unable to get separator string",
     ))?;
@@ -101,23 +103,22 @@ fn run() -> Result<()> {
         || "unable to read API response",
     )?;
 
-    let stocks: Vec<HashMap<String, String>> = serde_json::from_str(&contents).chain_err(
+    let data: Vec<HashMap<String, String>> = serde_json::from_str(&contents).chain_err(
         || "unable to parse API response",
     )?;
 
-    let stocks: HashMap<String, HashMap<String, String>> = stocks
-        .iter()
+    let data: HashMap<String, HashMap<String, String>> = data.iter()
         .map(|s| (s["symbol"].clone(), s.clone()))
         .collect();
 
-    let mut iter = cryptos.iter().peekable();
+    let mut iter = cryptocurrencys.iter().peekable();
     while let Some(current) = iter.next() {
-        let stock = stocks.get::<str>(current).ok_or(Error::from(format!(
-            "unable to get {} stock",
+        let value = data.get::<str>(current).ok_or(Error::from(format!(
+            "unable to get {} value",
             current
         )))?;
 
-        print!("{}", strfmt(format, stock).chain_err(|| "unable to format stock")?);
+        print!("{}", strfmt(format, value).chain_err(|| "unable to format value")?);
 
         match iter.peek() {
             Some(_) => print!("{}", separator),
