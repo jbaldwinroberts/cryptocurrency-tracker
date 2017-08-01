@@ -14,6 +14,10 @@ use strfmt::strfmt;
 
 extern crate hyper;
 use hyper::Client;
+use hyper::net::HttpsConnector;
+
+extern crate hyper_native_tls;
+use hyper_native_tls::NativeTlsClient;
 
 extern crate clap;
 use clap::{App, Arg};
@@ -92,9 +96,13 @@ fn run() -> Result<()> {
         "unable to get separator string",
     ))?;
 
-    let client = Client::new();
+    let ssl = NativeTlsClient::new().chain_err(
+        || "unable to create NativeTlsClient",
+    )?;
+    let connector = HttpsConnector::new(ssl);
+    let client = Client::with_connector(connector);
     let mut response = client
-        .get("http://api.coinmarketcap.com/v1/ticker/?limit=10")
+        .get("https://api.coinmarketcap.com/v1/ticker/?limit=10")
         .send()
         .chain_err(|| "unable to send GET request")?;
 
