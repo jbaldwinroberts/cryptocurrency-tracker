@@ -102,7 +102,7 @@ fn run() -> Result<()> {
     let connector = HttpsConnector::new(ssl);
     let client = Client::with_connector(connector);
     let mut response = client
-        .get("https://api.coinmarketcap.com/v1/ticker/?limit=10")
+        .get("https://api.coinmarketcap.com/v1/ticker")
         .send()
         .chain_err(|| "unable to send GET request")?;
 
@@ -111,17 +111,23 @@ fn run() -> Result<()> {
         || "unable to read API response",
     )?;
 
-    let data: Vec<HashMap<String, String>> = serde_json::from_str(&contents).chain_err(
-        || "unable to parse API response",
-    )?;
+    let pre_data: Vec<HashMap<String, Option<String>>> =
+        serde_json::from_str(&contents).chain_err(
+            || "unable to parse API response",
+        )?;
 
-    let data: HashMap<String, HashMap<String, String>> = data.iter()
-        .map(|s| (s["symbol"].clone(), s.clone()))
-        .collect();
+    let mut post_data: HashMap<String, HashMap<String, String>> = HashMap::new();
+    for d in pre_data {
+        let mut buffer: HashMap<String, String> = HashMap::new();
+        for (k, v) in d {
+            buffer.insert(k, v.unwrap_or(String::from("not found")));
+        }
+        post_data.insert(buffer["symbol"].clone(), buffer);
+    }
 
     let mut iter = cryptocurrencys.iter().peekable();
     while let Some(current) = iter.next() {
-        let value = data.get::<str>(current).ok_or(Error::from(format!(
+        let value = post_data.get::<str>(current).ok_or(Error::from(format!(
             "unable to get {} value",
             current
         )))?;
