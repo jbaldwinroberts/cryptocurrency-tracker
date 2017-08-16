@@ -85,16 +85,16 @@ fn run() -> Result<()> {
 
     let cryptocurrencys: Vec<_> = matches
         .values_of("cryptocurrency")
-        .ok_or(Error::from("unable to get cryptocurrency vector"))?
+        .ok_or_else(|| Error::from("unable to get cryptocurrency vector"))?
         .collect();
 
-    let format: &str = matches.value_of("format").ok_or(Error::from(
-        "unable to get format string",
-    ))?;
+    let format: &str = matches.value_of("format").ok_or_else(|| {
+        Error::from("unable to get format string")
+    })?;
 
-    let separator: &str = matches.value_of("separator").ok_or(Error::from(
-        "unable to get separator string",
-    ))?;
+    let separator: &str = matches.value_of("separator").ok_or_else(|| {
+        Error::from("unable to get separator string")
+    })?;
 
     let ssl = NativeTlsClient::new().chain_err(
         || "unable to create NativeTlsClient",
@@ -120,17 +120,16 @@ fn run() -> Result<()> {
     for d in pre_data {
         let mut buffer: HashMap<String, String> = HashMap::new();
         for (k, v) in d {
-            buffer.insert(k, v.unwrap_or(String::from("not found")));
+            buffer.insert(k, v.unwrap_or_else(|| String::from("not found")));
         }
         post_data.insert(buffer["symbol"].clone(), buffer);
     }
 
     let mut iter = cryptocurrencys.iter().peekable();
     while let Some(current) = iter.next() {
-        let value = post_data.get::<str>(current).ok_or(Error::from(format!(
-            "unable to get {} value",
-            current
-        )))?;
+        let value = post_data.get::<str>(current).ok_or_else(|| {
+            Error::from(format!("unable to get {} value", current))
+        })?;
 
         print!("{}", strfmt(format, value).chain_err(|| "unable to format value")?);
 
